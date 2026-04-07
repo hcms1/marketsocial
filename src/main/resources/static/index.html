@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MarketSocial</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">MarketSocial</p>
+        <h1>The first official MarketSocial build.</h1>
+        <p class="lede">Launch your marketplace, shape your profile, publish listings, and talk directly with buyers and sellers from one place.</p>
+      </div>
+    </section>
+
+    <section id="authPanel" class="panel auth-panel">
+      <div class="tabs">
+        <button id="showLogin" class="tab active" type="button">Login</button>
+        <button id="showRegister" class="tab" type="button">Register</button>
+      </div>
+
+      <form id="loginForm" class="form">
+        <label>
+          Username
+          <input id="loginUsername" name="username" autocomplete="username" required>
+        </label>
+        <label>
+          Password
+          <input id="loginPassword" name="password" type="password" autocomplete="current-password" required>
+        </label>
+        <button type="submit">Sign In</button>
+      </form>
+
+      <form id="registerForm" class="form hidden">
+        <div class="release-note">
+          <p class="eyebrow">First-run setup</p>
+          <p>The first account registered on a fresh install becomes the admin account automatically.</p>
+        </div>
+        <label>
+          Username
+          <input id="registerUsername" name="username" autocomplete="username" required>
+        </label>
+        <label>
+          Password
+          <input id="registerPassword" name="password" type="password" autocomplete="new-password" required>
+        </label>
+        <label>
+          Account type
+          <select id="registerAccountType" name="accountType" required>
+            <option value="USER">Browser / Buyer</option>
+            <option value="SELLER">Seller</option>
+          </select>
+        </label>
+        <label>
+          Email for message alerts
+          <input id="registerEmail" name="email" type="email" autocomplete="email" placeholder="optional@example.com">
+        </label>
+        <label class="checkbox-row">
+          <input id="registerEmailNotificationsEnabled" type="checkbox">
+          <span>Email me when I get a new message</span>
+        </label>
+        <button type="submit">Create Account</button>
+      </form>
+
+      <p id="authMessage" class="feedback"></p>
+    </section>
+
+    <section id="appPanel" class="panel app-panel hidden">
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">Signed in</p>
+          <h2 id="currentUserLabel"></h2>
+        </div>
+        <div class="app-actions">
+          <button id="navOverview" class="tab active" type="button">Overview</button>
+          <button id="navMarketplace" class="tab" type="button">Marketplace</button>
+          <button id="navSell" class="tab" type="button">My Listings</button>
+          <button id="navMessages" class="tab nav-tab-with-badge" type="button">
+            <span>Messages</span>
+            <span id="messagesUnreadBadge" class="badge hidden">0</span>
+          </button>
+          <button id="navProfile" class="tab" type="button">Profile</button>
+          <button id="logoutButton" type="button" class="secondary">Logout</button>
+        </div>
+      </header>
+
+      <section id="viewOverview" class="view">
+        <div class="overview-grid">
+          <article class="panel inset stat-card">
+            <p class="eyebrow">Profile</p>
+            <h3 id="overviewDisplayName">-</h3>
+            <p id="overviewBio" class="muted"></p>
+          </article>
+          <article class="panel inset stat-card">
+            <p class="eyebrow">Account Type</p>
+            <h3 id="overviewRole">-</h3>
+            <p class="muted">Switch between browsing and selling in your profile.</p>
+          </article>
+          <article class="panel inset stat-card">
+            <p class="eyebrow">Listings</p>
+            <h3 id="overviewProductCount">0</h3>
+            <p class="muted">Products currently published.</p>
+          </article>
+        </div>
+
+        <div class="two-column" id="sellerPostSection">
+          <section class="panel inset">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Seller feed</p>
+                <h3>Post an update</h3>
+              </div>
+            </div>
+            <form id="postForm" class="form post-form">
+              <label>
+                Update
+                <textarea id="postContent" rows="4" maxlength="1200" placeholder="Share new drops, restocks, special offers, or collection updates."></textarea>
+              </label>
+              <label>
+                Optional image upload
+                <input id="postImageUpload" type="file" accept="image/*">
+              </label>
+              <div id="postImageStatus" class="field-note">Upload a photo directly from your device.</div>
+              <button type="submit">Publish Post</button>
+            </form>
+          </section>
+
+          <section class="panel inset">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Latest posts</p>
+                <h3>Social feed</h3>
+              </div>
+            </div>
+            <div id="overviewPosts" class="feed-list"></div>
+          </section>
+        </div>
+
+        <section id="browserOverviewNote" class="panel inset hidden">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Seller tools</p>
+              <h3>Browsing account</h3>
+            </div>
+          </div>
+          <p class="muted">Switch your account type to seller in Profile when you want to publish listings and posts.</p>
+        </section>
+
+        <div class="two-column">
+          <section class="panel inset">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Newest products</p>
+                <h3>Marketplace feed</h3>
+              </div>
+            </div>
+            <div id="overviewProducts" class="card-list"></div>
+          </section>
+
+          <section class="panel inset">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Seller profile</p>
+                <h3 id="sellerSpotlightTitle">Select a seller</h3>
+              </div>
+            </div>
+            <div id="sellerSpotlight" class="empty-state">Choose a product or seller to inspect the profile.</div>
+          </section>
+        </div>
+      </section>
+
+      <section id="viewMarketplace" class="view hidden">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Marketplace</p>
+            <h3>All products</h3>
+          </div>
+        </div>
+        <div id="marketplaceProducts" class="card-list grid-list"></div>
+      </section>
+
+      <section id="viewSell" class="view hidden">
+        <div class="two-column">
+          <section class="panel inset">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Create or edit</p>
+                <h3 id="listingFormTitle">New listing</h3>
+              </div>
+            </div>
+
+            <form id="productForm" class="form">
+              <input id="productId" type="hidden">
+              <label>
+                Title
+                <input id="productTitle" required>
+              </label>
+              <label>
+                Category
+                <input id="productCategory" placeholder="Fashion, Art, Home, Collectibles">
+              </label>
+              <label>
+                Price
+                <input id="productPrice" type="number" min="0.01" step="0.01" required>
+              </label>
+              <label>
+                Description
+                <textarea id="productDescription" rows="5"></textarea>
+              </label>
+              <label>
+                Upload images
+                <input id="productImagesUpload" type="file" accept="image/*" multiple>
+              </label>
+              <div id="productImageStatus" class="field-note">Upload up to 6 images directly from your device.</div>
+              <div id="productImagePreview" class="image-preview-list"></div>
+              <div class="inline-actions">
+                <button type="submit">Save Listing</button>
+                <button id="cancelEditButton" class="secondary hidden" type="button">Cancel Edit</button>
+              </div>
+            </form>
+          </section>
+
+          <section class="panel inset">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Your inventory</p>
+                <h3>My listings</h3>
+              </div>
+            </div>
+            <div id="myProducts" class="card-list"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="viewMessages" class="view hidden">
+        <div class="messaging-layout">
+          <aside class="panel inset">
+            <div class="section-head">
+              <h3>Users</h3>
+            </div>
+            <div id="usersList" class="users-list"></div>
+          </aside>
+
+          <section class="panel inset conversation">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Conversation</p>
+                <h3 id="conversationTitle">Select a user</h3>
+              </div>
+            </div>
+
+            <div id="messagesList" class="messages-list empty-state">
+              Pick a user to load messages.
+            </div>
+
+            <form id="messageForm" class="composer hidden">
+              <textarea id="messageInput" rows="3" maxlength="1000" placeholder="Write a message"></textarea>
+              <button type="submit">Send Message</button>
+            </form>
+          </section>
+        </div>
+      </section>
+
+      <section id="viewProfile" class="view hidden">
+        <div class="two-column">
+          <section class="panel inset">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Account profile</p>
+                <h3>Edit your seller profile</h3>
+              </div>
+            </div>
+            <form id="profileForm" class="form">
+              <label>
+                Account type
+                <select id="profileAccountType" required>
+                  <option value="USER">Browser / Buyer</option>
+                  <option value="SELLER">Seller</option>
+                </select>
+              </label>
+              <label>
+                Display name
+                <input id="profileDisplayName" required>
+              </label>
+              <label>
+                City
+                <input id="profileCity">
+              </label>
+              <label>
+                Bio
+                <textarea id="profileBio" rows="6" maxlength="1200"></textarea>
+              </label>
+              <label>
+                Notification email
+                <input id="profileEmail" type="email" autocomplete="email" placeholder="optional@example.com">
+              </label>
+              <label class="checkbox-row">
+                <input id="profileEmailNotificationsEnabled" type="checkbox">
+                <span>Email me when I get a new message</span>
+              </label>
+              <button type="submit">Save Profile</button>
+            </form>
+          </section>
+
+          <section class="panel inset">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Public view</p>
+                <h3 id="profilePreviewTitle">Profile preview</h3>
+              </div>
+            </div>
+            <div id="profilePreview" class="profile-card"></div>
+          </section>
+        </div>
+
+        <div class="two-column">
+          <section class="panel inset">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Security</p>
+                <h3>Change password</h3>
+              </div>
+            </div>
+            <form id="passwordForm" class="form">
+              <label>
+                Current password
+                <input id="currentPassword" type="password" autocomplete="current-password" required>
+              </label>
+              <label>
+                New password
+                <input id="newPassword" type="password" autocomplete="new-password" required>
+              </label>
+              <button type="submit">Update Password</button>
+            </form>
+          </section>
+
+          <section class="panel inset danger-panel">
+            <div class="section-head">
+              <div>
+                <p class="eyebrow">Danger zone</p>
+                <h3>Delete account</h3>
+              </div>
+            </div>
+            <p class="muted">This permanently removes your profile, products, posts, and messages.</p>
+            <form id="deleteAccountForm" class="form">
+              <label>
+                Confirm password
+                <input id="deleteAccountPassword" type="password" autocomplete="current-password" required>
+              </label>
+              <button id="deleteAccountButton" type="submit" class="danger-button">Delete My Account</button>
+            </form>
+          </section>
+        </div>
+
+        <section id="adminUserCreationSection" class="panel inset hidden">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Admin tools</p>
+              <h3>Create user</h3>
+            </div>
+          </div>
+          <form id="adminUserForm" class="form">
+            <label>
+              Username
+              <input id="adminCreateUsername" autocomplete="off" required>
+            </label>
+            <label>
+              Password
+              <input id="adminCreatePassword" type="password" autocomplete="new-password" required>
+            </label>
+            <label>
+              Display name
+              <input id="adminCreateDisplayName" required>
+            </label>
+            <label>
+              Role
+              <select id="adminCreateRole" required>
+                <option value="USER">Browser / Buyer</option>
+                <option value="SELLER">Seller</option>
+                <option value="ADMIN">Admin</option>
+              </select>
+            </label>
+            <label>
+              Email
+              <input id="adminCreateEmail" type="email" autocomplete="off" placeholder="optional@example.com">
+            </label>
+            <label class="checkbox-row">
+              <input id="adminCreateEmailNotificationsEnabled" type="checkbox">
+              <span>Email on new messages</span>
+            </label>
+            <label>
+              City
+              <input id="adminCreateCity">
+            </label>
+            <label>
+              Bio
+              <textarea id="adminCreateBio" rows="4" maxlength="1200"></textarea>
+            </label>
+            <button type="submit">Create User</button>
+          </form>
+        </section>
+
+        <section id="adminUserManagementSection" class="panel inset hidden">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Admin tools</p>
+              <h3>Manage users</h3>
+            </div>
+          </div>
+          <div id="adminUsersList" class="admin-users-list"></div>
+        </section>
+      </section>
+
+      <p id="appMessage" class="feedback"></p>
+    </section>
+
+    <footer class="site-footer">
+      <p><strong>Built by H-C</strong> • Design by H-C • Co-founder Beamo</p>
+      <p>Contact: <a href="mailto:harrisoncraig1409@gmail.com">harrisoncraig1409@gmail.com</a> • Made with love in the UK</p>
+    </footer>
+  </main>
+
+  <div id="notificationToasts" class="toast-stack" aria-live="polite" aria-atomic="true"></div>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+services:
+  app:
+    build:
+      context: .
+    container_name: marketsocial-app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SERVER_ADDRESS: 0.0.0.0
+      SERVER_PORT: 8080
+      DATABASE_URL: jdbc:postgresql://db:5432/marketsocial
+      DATABASE_USERNAME: marketsocial
+      DATABASE_PASSWORD: marketsocial
+      MEDIA_UPLOAD_DIR: /app/uploads
+      EMAIL_NOTIFICATIONS_ENABLED: ${EMAIL_NOTIFICATIONS_ENABLED:-false}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST:-}
+      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT:-587}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME:-}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD:-}
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH:-true}
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE:-true}
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./uploads:/app/uploads
+    restart: unless-stopped
+
+  db:
+    image: postgres:17
+    container_name: marketsocial-db
+    environment:
+      POSTGRES_DB: marketsocial
+      POSTGRES_USER: marketsocial
+      POSTGRES_PASSWORD: marketsocial
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U marketsocial -d marketsocial"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
