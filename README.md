@@ -133,6 +133,152 @@ Operational notes:
 - If you enable the VM firewall with UFW, allow `OpenSSH`, `80/tcp`, and `443/tcp`.
 - After deployment, confirm `https://your-domain` loads before testing login, uploads, or email.
 
+## GitHub Auto-Deploy (Webhook-based)
+
+This project supports automatic deployment when you push to GitHub.
+
+### How it works
+
+1. You push to `main` on GitHub.
+2. GitHub sends a webhook to your VM's `webhook` listener.
+3. The VM runs `/home/ubuntu/deploy.sh`, which:
+   - Fetches and resets to `origin/main`
+   - Rebuilds the Docker image
+   - Restarts the stack
+
+### Setup on your VM
+
+1. Install `webhook`:
+
+   ```bash
+   sudo apt-get update
+   sudo apt-get install -y webhook
+   ```
+
+2. Create the deploy script:
+
+   ```bash
+   cd /home/ubuntu/marketsocial
+
+   cat > /home/ubuntu/deploy.sh <<'EOF'
+   #!/usr/bin/env bash
+   set -euo pipefail
+
+   cd /home/ubuntu/marketsocial
+
+   echo "=== $(date) deploy start ==="
+
+   git fetch origin main
+   git reset --hard origin/main
+
+   docker compose build --no-cache app
+   docker compose up -d
+
+   echo "=== $(date) deploy done ==="
+   EOF
+
+   chmod +x /home/ubuntu/deploy.sh
+   ```
+
+3. Create webhook config (`/home/ubuntu/hooks.json`) with a secret (e.g., `ERIN`):
+
+   ```json
+   [
+     {
+       "id": "deploy",
+       "execute-command": "/home/ubuntu/deploy.sh",
+       "command-working-directory": "/home/ubuntu/marketsocial",
+       "pass-arguments-to-command": [
+         { "source": "string", "name": "github" }
+       ],
+       "trigger-rule": {
+         "match": {
+           "type": "value",
+           "value": "YOUR_SECRET_HERE",
+           "parameter": {
+             "source": "header",
+             "name": "X-Hub-Signature-256"
+           }
+         }
+       }
+     }
+   ]
+   ```
+
+4. Create the systemd service (`/etc/systemd/system/webhook.service`):
+
+   ```bash
+   sudo tee /etc/systemd/system/webhook.service > /dev/null <<'EOF'
+   [Unit]
+   Description=GitHub Webhook Listener for Auto-Deploy
+   After=network.target
+
+   [Service]
+   Type=simple
+   User=ubuntu
+   Group=ubuntu
+   ExecStart=/usr/bin/webhook -hooks /home/ubuntu/hooks.json -verbose -port 9000
+   Restart=always
+   RestartSec=5
+   WorkingDirectory=/home/ubuntu/marketsocial
+
+   [Install]
+   WantedBy=multi-user.target
+   EOF
+   ```
+
+5. Start and enable the service:
+
+   ```bash
+   sudo systemctl daemon-reexec
+   sudo systemctl daemon-reload
+   sudo systemctl enable webhook.service
+   sudo systemctl start webhook.service
+   ```
+
+6. Confirm it's running:
+
+   ```bash
+   sudo ss -tulnp | grep webhook
+   # Should show port 9000
+   ```
+
+### GitHub webhook setup
+
+1. In your repo, go to **Settings → Webhooks → Add webhook**.
+2. **Payload URL**: `http://<YOUR_VM_IP>:9000/hooks/deploy`
+   - Example: `http://145.241.193.116:9000/hooks/deploy`
+3. **Content type**: `application/json`
+4. **Secret**: `ERIN`
+5. **Which events?**: `Just the push event`
+6. ✅ **Active**: checked
+7. Click **Add webhook**.
+
+### Test the setup
+
+Make a small change, commit, and push:
+
+```bash
+echo "# test" >> README.md
+git add .
+git commit -m "test auto-deploy"
+git push origin main
+```
+
+Check the webhook delivery in GitHub (repo → Settings → Webhooks → click the webhook → check the delivery log).
+
+On the VM, watch logs:
+
+```bash
+sudo journalctl -u webhook.service -f
+```
+
+### Troubleshooting
+
+- If the webhook fails, verify the secret in `hooks.json` matches the GitHub webhook secret.
+- Ensure the VM firewall allows inbound port `9000`.
+- Confirm `webhook` service is running: `sudo systemctl status webhook.service`.
+
 ## Next step for real hosting
 
 When you want to move off your PC, this setup transfers cleanly to:
@@ -140,3 +286,4 @@ When you want to move off your PC, this setup transfers cleanly to:
 - a cheap VPS running Docker Compose
 - a cloud VM with Docker
 - a platform that can run a Java container plus Postgres
+# test auto-deploy

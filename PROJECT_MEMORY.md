@@ -28,3 +28,45 @@
     - Web access: `https://your-domain`.
     - VM access: `ssh -i private_key.key ubuntu@ip`.
     - Note: This info was previously in README but moved here to keep README focused on project overview.
+- **2026-04-07 — GitHub Auto-Deploy Setup (Webhook-based)**:
+    - Added automated deployment pipeline triggered by `git push` to GitHub.
+    - VM (`ubuntu@instance-20260407-0703`) runs `webhook` server on port `9000` with systemd service (`/etc/systemd/system/webhook.service`).
+    - Deploy script at `/home/ubuntu/deploy.sh`: pulls latest `main`, resets to `origin/main`, rebuilds Docker image, and restarts stack.
+    - GitHub webhook configured at repo → Settings → Webhooks with payload URL `http://145.241.193.116:9000/hooks/deploy`, secret `ERIN`, and `X-Hub-Signature-256` header matching.
+    - Webhook config at `/home/ubuntu/hooks.json` with `trigger-rule` verifying HMAC-SHA256 signature.
+    - Final webhook URL format: `http://<VM_IP>:9000/hooks/deploy`.
+    - Commands used:
+      ```bash
+      sudo apt-get install -y webhook
+      sudo tee /etc/systemd/system/webhook.service > /dev/null <<'EOF'
+      [Unit]
+      Description=GitHub Webhook Listener for Auto-Deploy
+      After=network.target
+      [Service]
+      Type=simple
+      User=ubuntu
+      Group=ubuntu
+      ExecStart=/usr/bin/webhook -hooks /home/ubuntu/hooks.json -verbose -port 9000
+      Restart=always
+      RestartSec=5
+      WorkingDirectory=/home/ubuntu/marketsocial
+      [Install]
+      WantedBy=multi-user.target
+      EOF
+      sudo systemctl daemon-reexec && sudo systemctl daemon-reload && sudo systemctl enable webhook && sudo systemctl start webhook
+      ```
+      ```bash
+      cat > /home/ubuntu/deploy.sh <<'EOF'
+      #!/usr/bin/env bash
+      set -euo pipefail
+      cd /home/ubuntu/marketsocial
+      echo "=== $(date) deploy start ==="
+      git fetch origin main
+      git reset --hard origin/main
+      docker compose build --no-cache app
+      docker compose up -d
+      echo "=== $(date) deploy done ==="
+      EOF
+      chmod +x /home/ubuntu/deploy.sh
+      ```
+    - Updated `README.md` with GitHub auto-deploy section, including webhook URL, setup steps, and secret configuration.
