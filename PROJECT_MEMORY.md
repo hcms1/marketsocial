@@ -1,8 +1,15 @@
 # Project Memory
 
-## 2026-04-07
+## 2026-04-13
 
-- MarketSocial is a Spring Boot app with a static frontend, PostgreSQL persistence, Docker Compose local hosting, and optional Caddy-based HTTPS for production.
+- Fixed compilation errors in `OrderController.java`:
+  - Added missing `import java.util.Optional;` for Optional usage in product filtering
+  - Added missing `import org.springframework.web.server.ResponseStatusException;` for exception handling
+- Fixed database table name conflict in `Order.java`:
+  - Added `@Table(name = "`order`")` to escape the reserved SQL keyword `ORDER`
+  - This resolves HSQLDB syntax errors during test schema generation
+
+## 2026-04-07
 - Core backend areas currently present in the repo: authentication, profiles, products/listings, seller posts, media uploads, direct messages, admin user management, and API exception handling.
 - Frontend lives in `src/main/resources/static/` with `index.html`, `app.js`, and `style.css`.
 - Docker helpers exist in `scripts/`: `restart-docker.sh` restarts the stack and can run the smoke test, and `docker-smoke.sh` creates a throwaway user, logs in, checks `/api/auth/me`, then deletes the user.
